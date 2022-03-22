@@ -73,7 +73,7 @@ def label_and_ner():
     result = {"question": [], 'answer': [], 'label': [], 'ners': []}
 
     i = 0
-    for question, answer in tqdm(zip(frame["questions"], frame["answers"]), desc="label and ner"):
+    for question, answer in tqdm(zip(frame["questions"][297128:], frame["answers"][297128:]), desc="label and ner"):
         prompt_ = prompt.format(question+answer)
         payload_ner = {
             'text': [question+answer]
@@ -108,6 +108,8 @@ def label_and_ner():
             datas_frame = pd.DataFrame(result)
             datas_frame.to_csv(f"../data/stc_labeled_{(i/50000)*5}w.csv", index=False)
             print(f"save success, already processed {i} items ")
+            for key in result.keys():
+                result[key] = []
 
 
 def process_func(question, answer):
