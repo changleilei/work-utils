@@ -134,10 +134,40 @@ def temp_func():
             print(text)
 
 
+def generate_zh():
+    data_path = '../data/multi_turn/dialog_zh.json'
+    results = {'question': [], 'answer': []}
+    # templates = "PERSON1：{0} PERSON2："
+    with open(data_path, 'r', encoding='utf8') as f:
+        datas = json.load(f)
+        for data in datas:
+            sentences = data['content']
+            for i in range(0, len(sentences)-2, 2):
+                results['question'].append(sentences[i])
+                # results['question'].append(templates.format(sentences[i]))
+                results['answer'].append(sentences[i+1])
+                # if len(results['answer']) > 9000:
+                #     break
+    frame = pd.DataFrame(results)
+    # frame.to_excel('../data/multi_turn/dialog_zh1.xlsx', index=False)
+    frame.to_csv('../data/multi_turn/dialog_zh.csv', index=False)
+
+
+# def clean_bad_words():
+#     data_path = '../data/bad_words.txt'
+#     result = []
+#     with open(data_path, 'r', encoding='utf8') as f:
+#         for line in f:
+#             if len(line) < 2:
+#                 result.append(line+'\n')
+#
+#         with open('../data/short_bad_word.txt', 'r')
+
 if __name__ == '__main__':
     # clean_wiki_zh_xml()
     # clean_wiki_zh_txt()
     # reconstruct_txt2json()
     # reconstruct_csv2json()
-    wiki_tongxun_clean()
+    # wiki_tongxun_clean()
     # temp_func()
+    generate_zh()

@@ -6,7 +6,7 @@
 import torch
 from transformers import AutoTokenizer, \
     DistilBertForSequenceClassification
-
+import json
 import pandas as pd
 from transformers.modeling_outputs import SequenceClassifierOutput
 
@@ -98,6 +98,42 @@ def functions():
     pd.DataFrame(result).to_csv('../data/dailydialogue/emotion_dailydialogue.csv')
 
 
+def wildseed_process():
+    emotion_dict = {'calm': 'neutral', 'happy': 'amusement', 'joyful': 'joy',
+                    'annoyed': 'annoyance', 'angry': 'anger', 'enraged': 'disgust',
+                    'nervous': 'nervousness', 'afraid': 'fear', 'terrified': 'fear',
+                    'pensive': 'disappointment', 'sad': 'sadness', 'grieving': 'grief'}
+    emotion_reverse = {value: key for key, value in emotion_dict.items()}
+
+    frame = pd.read_csv('../data/dailydialogue/emotion_dailydialogue.csv')
+
+    completion = "{0}\n"
+    result = []
+    for question, answer, q_label, ans_label in zip(frame['questions'],frame['answers'],frame['questions_label'], frame['answers_label']):
+        line_prompt = {"prompt": "", "completion": ""}
+        if q_label in emotion_reverse and ans_label in emotion_reverse:
+            line_prompt['prompt'] = "User: ({0}){1}\nAI:({2})".format(emotion_reverse[q_label], question, emotion_reverse[ans_label])
+            line_prompt['completion'] = completion.format(answer)
+            result.append(line_prompt)
+        elif q_label in emotion_reverse:
+
+            line_prompt['prompt'] = "User: ({0}){1}\nAI: ".format(emotion_reverse[q_label], question)
+            line_prompt['completion'] = completion.format(answer)
+            result.append(line_prompt)
+        elif ans_label in emotion_reverse:
+            line_prompt['prompt'] = "User: {0}\nAI: ({1})".format(question, emotion_reverse[ans_label])
+            line_prompt['completion'] = completion.format(answer)
+            result.append(line_prompt)
+        else:
+            line_prompt['prompt'] = 'User: {0}\nAI: '.format(question)
+            line_prompt['completion'] = completion.format(answer)
+            result.append(line_prompt)
+
+    with open('../data/dailydialogue/finetune_emotion.jsonl', 'w', encoding='utf8') as f:
+        for r in result:
+            f.write(json.dumps(r)+'\n')
+
 
 if __name__ == '__main__':
-    functions()
+    # functions()
+    wildseed_process()
