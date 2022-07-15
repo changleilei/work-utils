@@ -1,0 +1,38 @@
+{
+  "model_type": "bert",
+  "max_seq_len": 20,
+  "model_path": "modelbin/bert/",
+  "log_path": "log/",
+
+  "train_file_path": "data/train.csv",
+  "valid_file_path": "data/test.csv",
+
+  "batch_size": 8,
+
+  "modelpool_network": "abs",
+  "sentence_model": "./sn-xlm-roberta-base/",
+  "opt_ali": true,
+  "opt_model_path": "traced_bert_opt.pt",
+  "bert_model_path": "roberta_wwm_large_ext/",
+  "cls_model_path": "modelbin/bert/model.bin",
+  "trained_weight":"",
+  "probability_threshold": 0.2,
+  "similarity_threshold": 0.5,
+  "similarity_wanfa":0.7,
+  "hidden_size": 1024,
+  "num_classes": 2,
+  "dropout": 0.30,
+
+  "lr": 3e-5,
+  "num_epoch": 40,
+  "log_steps": 100,
+  "serial_load": true,
+  "metrics_debug": false,
+  "num_warmup_steps": 0,
+  "num_training_steps": 32000,
+  "gradient_accumulation_steps": 32,
+  "max_grad_norm": 3e-3,
+  "num_cores": 8,
+
+  "experiment_name": "BERT"
+}

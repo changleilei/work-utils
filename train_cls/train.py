@@ -91,7 +91,7 @@ from tqdm import tqdm
 def main(args):
     # 参数设置
     batch_size = 4
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = 'cpu' if torch.cuda.is_available() else 'cpu'
     epochs = 10
     learning_rate = 5e-6  # Learning Rate不宜太大
 

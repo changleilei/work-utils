@@ -1,0 +1,43 @@
+services:
+  tianlongintent_sementic_web-1:
+    image: flczmsxh/tianlong_cls_1103:latest
+    volumes:
+      - /root/rct-tianlong-intent-cls/data:/rct/data
+    command: python3 torch_server.py -p 8080
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - device_ids: ['0']
+              capabilities:
+              - gpu
+  tianlongintent_sementic_web-2:
+    image: flczmsxh/tianlong_cls_1103:latest
+    volumes:
+      - /root/rct-tianlong-intent-cls/data:/rct/data
+    command: python3 torch_server.py -p 8080
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - device_ids: ['1']
+              capabilities:
+              - gpu
+  nginx:
+    image: axizdkr/tengine
+    container_name: tianlong-nginx
+    volumes:
+      - "./nginx-2-gpu.conf:/etc/nginx/conf.d/nginx.conf"
+      - "/usr/share/zoneinfo/Asia/Shanghai:/usr/share/zoneinfo/Asia/Shanghai"
+      - "/etc/localtime:/etc/localtime:ro"
+    depends_on:
+      - tianlongintent_sementic_web-1
+      - tianlongintent_sementic_web-2
+    ports:
+      - mode: host
+        protocol: tcp
+        published: 8032
+        target: 8032
+    environment:
+      TZ: 'Asia/Shanghai'
+    restart: always

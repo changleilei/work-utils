@@ -1,0 +1,15 @@
+services:
+  tianlongintentweb:
+    image: images:latest
+    container_name: tianlong-intent
+    ports:
+    - 8031:8080
+    volumes:
+    - /root/rct-tianlong-intent-cls/data:/rct/data
+    command: python3 torch_server.py -p 8080
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities:
+              - gpu
