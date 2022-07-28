@@ -7,13 +7,14 @@ import glob
 
 import json
 import re
+import time
 
 import pandas as pd
 import requests
-from pdfminer.pdfinterp import PDFTextExtractionNotAllowed
+# from pdfminer.pdfinterp import PDFTextExtractionNotAllowed
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
-
+from tqdm import tqdm
 
 
 def get_short_text(text):
@@ -91,19 +92,19 @@ def exract():
 
 
 def split_data_txt():
-    data_path = '../data/卡夫卡/base.txt'
+    data_path = '../data/intent/意图数据-trigger.txt'
 
     with open(data_path, 'r', encoding='utf8') as f:
         texts = f.readlines()
         train_data, eval_datas = train_test_split(texts, test_size=0.2,shuffle=True)
         eval_data, test_data = train_test_split(eval_datas, test_size=0.2, shuffle=True)
 
-        with open(f'../data/卡夫卡/0527/train.txt', 'w', encoding='utf8') as f:
+        with open(f'../data/intent/train.txt', 'w', encoding='utf8') as f:
             f.writelines(train_data)
-        with open(f'../data/卡夫卡/0527/valid.txt', 'w', encoding='utf8') as f:
+        with open(f'../data/intent/valid.txt', 'w', encoding='utf8') as f:
             f.writelines(eval_data)
 
-        with open(f'../data/卡夫卡/0527/test.txt', 'w', encoding='utf8') as f:
+        with open(f'../data/intent/test.txt', 'w', encoding='utf8') as f:
             f.writelines(test_data)
 
 
@@ -161,14 +162,14 @@ def talk_process():
 
 def process_csv(field_name1, field_name2):
 
-    data = pd.read_csv('../data/卡夫卡/0527_base.csv')
-    templates = '对话上文:{0} 回复:{1}'
+    data = pd.read_csv('../data/intent/意图数据-trigger.csv')
+    templates = '这句话表达了什么意图：{0} 意图：<{1}>'
     result_ = []
     for q, a in zip(data[field_name1], data[field_name2]):
         text = templates.format(q,a)
         result_.append(text+'\n')
 
-    with open('../data/卡夫卡/base.txt', 'a') as f:
+    with open('../data/intent/意图数据-trigger.txt', 'a') as f:
         f.writelines(result_)
 
 
@@ -207,6 +208,72 @@ def process_test():
     data = shuffle(ta[['question', 'answer']])
     data.to_csv('../data/qa_match_cn/qa_match_test.csv', index=False)
 
+
+def test_intent():
+    import requests
+    import json
+
+    url = "http://39.99.138.47:8015/z"
+
+    payload = {
+        "prompt": "",
+        "number": 1,
+        "length": 150,
+        "top_p": 1,
+        "temperature": 0.8,
+        "strategy": "append"
+    }
+    headers = {
+        'User-Agent': 'apifox/1.0.0 (https://www.apifox.cn)',
+        'Content-Type': 'application/json'
+    }
+    result = []
+    with open('../data/intent/test.txt', 'r') as f:
+        for line in tqdm(f):
+            line_ = line.strip('\n').split(' 意图：')[0] + ' 意图：'
+            payload['prompt'] = line_
+
+            response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
+            text = response.json()['new_sentence'].replace('《', '').replace('》', '')
+            line = line + ',' + text
+            result.append(line + '\n')
+            time.sleep(1)
+    with open('../data/intent/test_result.txt', 'w') as f:
+        f.writelines(result)
+
+
+pattern = '^(回复|irs|伤心说|平静说|愤怒说|高兴说|伤心的说|平静的说|愤怒的说|高兴的说)'
+complie_ = re.compile(pattern)
+
+def process_colon(sentence, t=':', drop_list=None):
+    """
+    回复：开心的说：你好啊 -> 你好啊
+    """
+    if drop_list is None:
+        drop_list = []
+    sentence = sentence.strip()
+    split_ = sentence.split(t)
+    result = []
+    contain_drop = False  # 是否存在drop_list
+    for i in split_:
+        if i in drop_list:
+            contain_drop = True
+            continue
+        else:
+            result.append(i)
+    # 如果存在需要丢弃之前的
+    if contain_drop:
+        ans = t.join(result)
+
+    else:
+        ans = ''.join(result)
+
+    while result := complie_.match(ans):
+        _, end = result.span()
+        ans = ans[end:]
+
+    return ans
+
 if __name__ == '__main__':
     # data_process()
     # exract()
@@ -214,9 +281,13 @@ if __name__ == '__main__':
     # split_data()
     # enli_process()
     # talk_process()
-    # process_csv('Q', 'A')
+    # process_csv('多行文本', '中文意图')
     # process_qa()
     # split_data_csv('../data/qa_match_cn/qa_match_cn.csv')
     # split_data_txt()
     # process_test()
-    process_csv_with_emotion('Question', 'Answer', '情绪')
+    # process_csv_with_emotion('Question', 'Answer', '情绪')
+    ans = "  回复:高兴的说:这个我知道～“领航员”空间站的温度设定在华氏100度～"
+    ans = process_colon(sentence=ans, t=':',drop_list=['irs', '伤心说', '平静说', '回复', '愤怒说', '高兴说', '伤心的说', '平静的说', '愤怒的说', '高兴的说'])
+    print(ans)
+    # test_intent()
