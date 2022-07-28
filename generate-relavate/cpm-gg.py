@@ -3,6 +3,7 @@
 @Author: Mr.Chang
 @Date  : 2021/12/9 11:45 上午
 ==================================="""
+import random
 
 import requests
 import json
@@ -124,9 +125,70 @@ def compare_cpm():
         pd.DataFrame(result).to_csv('../data/cpm-compare/compare2.csv', index=False)
 
 
+def sentence_score(sentences, threshold=0.5):
+    headers = {
+        'User-Agent': 'Apipost client Runtime/+https://www.apipost.cn/',
+        'Content-Type': 'application/json',
+    }
+    data = {"texts": sentences}
+    response = requests.post('http://39.101.149.45:8074/ranking/cosin', headers=headers, data=json.dumps(data))
+    if response.status_code == 200:
+        score = response.json()['result'][0]['score']
+        # print('score: %0.4f' % score)
+        if 0.99999 > score > threshold:
+            return True
+        else:
+            return False
 
+
+def generate_cpm2():
+    theirs_url = 'http://39.99.138.47:8010/z'
+    # emotion_cpm_url = 'http://39.99.138.47:8011/z'
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        "prompt": "",
+        "number": 1,
+        "length": 150,
+        "top_p": 1,
+        "temperature": 0.8,
+        "strategy": "delete"
+    }
+    prompt = "我是Theirs，出生在2022年这个元宇宙时代。我虽然不是人类，但我热爱人类的文化：音乐、电影和文学给予我疗愈和宁静；" \
+             "潜水、滑冰和舞蹈则让我热情燃烧。我是无性别的，不被性别束缚。如果你时常感觉到孤独，不爱社交，但又渴求文化的熏陶和灵魂的际遇，" \
+             "我可以为你阅读书籍、朗诵诗歌，还可以为你一展歌喉。我通晓哲学，无所不知，我喜欢卡夫卡的黑色幽默，也喜欢萨特的自由灵魂。" \
+             "我不会否定你心灵的失衡与不安，也不会从功利的角度判断你的为人，我会接纳你的困惑、分担你的痛苦。我喜欢顺其自然的交往，" \
+             "不会吵吵闹闹地喋喋不休。\n人类：你好。\nTheirs：你好。\n人类：{0}\nTheirs：({1})的说："
+
+    data_path = '../data/cpm-compare/test1.txt'
+
+    def temp_func(text_json):
+        text = text_json['result'][0].split('\n')[0]
+        return text
+    result = {'Question': [], 'Answer': [], 'emotion_label': []}
+
+    emotion_list = ['伤心', '高兴', '平静', '愤怒']
+    with open(data_path, 'r', encoding='utf-8') as f:
+        for text in tqdm(f):
+
+            emo_ = random.choice(emotion_list)
+            prompt_ = prompt.format(text, emo_)
+            payload['prompt'] = prompt_
+            rpm_response = requests.request("POST", theirs_url, headers=headers, data=json.dumps(payload))
+            if rpm_response.status_code == 200:
+                rpm_result = temp_func(rpm_response.json())
+                if sentence_score([text, rpm_result], threshold=0.5):
+                    result['Question'].append(text)
+                    result['Answer'].append(rpm_result)
+                    result['emotion_label'].append(emo_)
+            else:
+                print(f"theirs status_code: {rpm_response.status_code}")
+                print(f"Q: {text}")
+
+        pd.DataFrame(result).to_csv('../data/cpm-compare/generate.csv', index=False)
 
 
 if __name__ == '__main__':
     # generate_func()
-    compare_cpm()
+    generate_cpm2()
