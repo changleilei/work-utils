@@ -12,9 +12,9 @@ from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
 model_name = './chinese-roberta-wwm-ext'
 model_save_path = 'robert-similar' + model_name.replace("/", "-") + '-' + datetime.now().strftime(
             "%Y-%m-%d_%H-%M-%S")
-train_data_path = '/data/nli/sts_datas/train.txt'
-valid_data_path = '/data/nli/sts_datas/valid.txt'
-test_data_path = '/data/nli/sts_datas/test.txt'
+train_data_path = '/data/nli/sts_datas/train1.txt'
+valid_data_path = '/data/nli/sts_datas/valid1.txt'
+test_data_path = '/data/nli/sts_datas/test1.txt'
 
 num_epochs = 20
 train_batch_size = 64
