@@ -1,3 +1,9 @@
 /data/
 /generate-relavate/gpt333.py
 /server/generate.txt
+*.pdf
+.idea/*
+server/__pycache__/*
+*.pyc
+.DS_Store
+base_gpt/data/input.txt
